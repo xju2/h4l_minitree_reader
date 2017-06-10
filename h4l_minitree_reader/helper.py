@@ -2,7 +2,8 @@
 
 def get_sys(sys_dir, file_name):
     """
-    This will read text file for systematics
+    This will read text file for systematics,
+    but up/down systematics are merged to 1.
     and returen a dictionary
     """
     sys_map = {}

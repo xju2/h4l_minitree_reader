@@ -153,6 +153,7 @@ class MinitreeReader(object):
             # data
             data = Sample('data')
             data.file_list.append(self.get_data_dir()+ 'data_13TeV.root')
+            data.is_data = True
             sample_list.append(data)
         else:
             print "I don't know"
@@ -188,7 +189,7 @@ class MinitreeReader(object):
 
     def get_sys_val(self, exp, sys_dic):
         if type(sys_dic) is dict:
-            print exp, sys_dic
+            # print exp, sys_dic, # only for debug
             return math.sqrt(sum([(exp*y)**2 for y in sys_dic.values()]))
         else:
             return sys_dic
@@ -241,7 +242,6 @@ class MinitreeReader(object):
                 else:
                     sys_ = self.get_sys_val(exp_, sys_dic_)
                     out_text += ' & ' + self.get_str(exp_, stat_, sys_)
-                    print "system:", sys_, exp_
 
             out_text += " \\\\ \n"
 
@@ -260,7 +260,7 @@ class MinitreeReader(object):
             else:
                 out_text += ' & '+self.get_str(total_exp, total_stat, total_sys)
 
-        out_text += "\\\\ \\hline \n"
+        out_text += " \\\\ \\hline \n"
         print out_text
 
     def print_list_paper(self, samples):
@@ -374,6 +374,8 @@ if __name__ == "__main__":
 
     parser.add_option("-v","--verbose", dest='debug', default=False, help="in a debug mode", action='store_true')
     parser.add_option("--paper", dest='paper', default=False, help="paper style", action='store_true')
+
+    parser.add_option("--histOut", default="hist_yields.root", help="root file for histograms")
 
     (options, args) = parser.parse_args()
 

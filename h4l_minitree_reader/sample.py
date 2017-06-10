@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import os
 from collections import namedtuple
 
 Category = namedtuple("Category", 'name cut')
@@ -15,6 +16,9 @@ class Sample(object):
         self.yields = {}
         self.is_data = False
         self.TREE_NAME = "tree_incl_all"
+
+    def get_hist_name(self, category):
+        return "{}_{}".format(self.name, category.name)
 
     def get_yield(self, category, options):
         """get yields in each category
@@ -34,6 +38,27 @@ class Sample(object):
         else:
             sys_ = 0
 
+        hist = None
+        if os.path.exists(options.histOut):
+            fout = ROOT.TFile.Open(options.histOut)
+            hist = fout.Get(self.get_hist_name(category))
+
+        if not hist:
+            hist = self.create_hist(category, options)
+            fout = ROOT.TFile.Open(options.histOut, 'UPDATE')
+            hist.Write()
+            fout.Close()
+
+        exp_ = hist.Integral() * self.scale
+        try:
+            stats_error = exp_/math.sqrt(hist.GetEntries())
+        except ZeroDivisionError:
+            stats_error = 0
+
+        self.yields[category.name] = (exp_, stats_error, sys_)
+        del hist
+
+    def create_hist(self, category, options):
         tree = ROOT.TChain(self.TREE_NAME, self.TREE_NAME)
         w_name = options.wName
 
@@ -54,14 +79,8 @@ class Sample(object):
 
             cut_t = ROOT.TCut(w_name+"/w_lumi*"+str(lumi)+"*("+cut+")")
 
-        hist_name = "{}_{}".format(self.name, category.name)
+        hist_name = self.get_hist_name(category)
         tree.Draw(options.poi+">>"+hist_name, cut_t)
         hist = ROOT.gDirectory.Get(hist_name)
-        exp_ = hist.Integral() * self.scale
-        try:
-            stats_error = exp_/math.sqrt(hist.GetEntries())
-        except ZeroDivisionError:
-            stats_error = 0
-
-        self.yields[category.name] = (exp_, stats_error, sys_)
+        hist.SetDirectory(0)
         return hist
