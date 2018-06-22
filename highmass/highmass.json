@@ -1,0 +1,6 @@
+{
+    "prod": "/eos/atlas/atlascerngroupdisk/phys-higgs/HSG2/H4l/2018/MiniTrees/Prod_v18/",
+    "categories": "category_noVBF.json",
+    "reducible": "reducible_noVBF.json",
+    "samples": "minitree.json"
+}

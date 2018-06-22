@@ -23,6 +23,9 @@ import math
 import re
 
 
+import json
+
+
 class MinitreeReader(object):
     def __init__(self, options_):
         self.TREE_NAME = "tree_incl_all"
@@ -32,135 +35,64 @@ class MinitreeReader(object):
         # setup range of POI, usually it's the mass.
         self.mass_low, self.mass_hi = options_.poi_range.split(':')
         self.split_2mu2e = False
-        self.DIR_BASE = "/afs/cern.ch/atlas/groups/HSG2/H4l/run2/2016/MiniTrees/"
+        self.DIR_BASE = options_.base
         print "Mass window", self.mass_low, self.mass_hi
 
         self.category_list = []
 
-    def get_cuts(self):
-        current_ana = self.options.analysis
+    def readInputJson(self, json_file):
+        data = json.load(open(json_file))
+
+        self.read_categories(data['categories'])
+
+        if "reducible" in data:
+            self.reducible_bkg_input = data['reducible']
+
+        self.get_samples(data['samples' ])
+
+    def read_categories(self, json_file):
+        data = json.load(open(json_file))
+
         m4l_ = self.options.poi
-
         mass_cut = "pass_vtx4lCut==1 &&"+self.mass_low+"<"+m4l_+"&&"+m4l_+"<"+self.mass_hi+"&&"
-        if current_ana == "HighMass":
+        for name,cut in data.iteritems():
+            cut = mass_cut+cut 
+            self.category_list.append(Category(name=name, cut=cut))
 
-            if self.options.no_VBF:
-                if self.options.noCombLep:
-                    self.category_list.append(Category(name="2mu2e", cut=mass_cut+"event_type==2"))
-                    self.category_list.append(Category(name="2e2mu", cut=mass_cut+"event_type==3"))
-                else:
-                    self.category_list.append(Category(name="2mu2e", cut=mass_cut+"(event_type==3 || event_type==2)"))
 
-                self.category_list.append(Category(name="4e", cut=mass_cut+"event_type==1"))
-                self.category_list.append(Category(name="4mu", cut=mass_cut+"event_type==0"))
-            else:
-                self.category_list.append(Category(name="4mu", cut=mass_cut+"event_type==0 && prod_type_HM==0"))
-                self.category_list.append(Category(name="2mu2e", cut=mass_cut+"(event_type==3 || event_type==2) && prod_type_HM==0"))
-                self.category_list.append(Category(name="4e", cut=mass_cut+"event_type==1 && prod_type_HM==0"))
-                self.category_list.append(Category(name="VBF", cut=mass_cut+"prod_type_HM==1"))
-        else:
-            print "analysis not defined"
+    def read_reducible(self):
+        data = json.load(open(self.reducible_bkg_input))
 
-    def get_reducible(self):
-        """return a dictionary for pre-defined background, the keys should match ones in get_cuts"""
-        current_ana = self.options.analysis
-        dic = OrderedDict()
-        if current_ana == "HighMass":
-            if self.options.no_VBF:
-                dic["2mu2e"] = (7.95706, 0.2926057, 1.1205216)
-                dic["4e"] = (4.48462, 0.241686, 0.789469)
-                dic["4mu"] = (3.78732, 0.159662, 0.884825)
-            else:
-                dic["2mu2e"] = (7.77571, 0, 1.05572)
-                dic["4e"] = (4.37282, 0, 0.759606)
-                dic["4mu"] = (3.71372, 0, 0.808304)
-                dic["VBF"] = (0.3724366, 0, 0.049943)
-        else:
-            print "I don't know"
+        if len(data.keys()) != len(self.category_list):
+            raise Exception("categories in reducible background do not match!")
 
-        return dic
+        return data
 
     def get_mc_dir(self):
-        return self.options.mcDir if self.options.prod is None else self.DIR_BASE + self.options.prod + "/mc/Nominal/"
+        return os.path.join(self.DIR_BASE, self.options.mcDir) if self.DIR_BASE is not None else self.options.mcDir
 
     def get_data_dir(self):
-        return self.options.dataDir if self.options.prod is None else self.DIR_BASE + self.options.prod + \
-                                                                      "/data/Nominal/"
+        return os.path.join(self.DIR_BASE, self.options.dataDir) if self.DIR_BASE is not None else self.options.dataDir
 
-    def get_samples(self):
-        analysis = self.options.analysis
+    def get_samples(self, json_file):
+        input_ =  json.load(open(json_file))
         mc_dir = self.get_mc_dir()
         print "MC dir",mc_dir
-        sample_list = []
-        if analysis == "HighMass":
-
-            # qqZZ
-            qq_zz = Sample("qqZZ")
-            if self.options.powheg:
-                # Powheg
-                print "use PowHeg for qqZZ"
-                qq_zz.file_list.append(mc_dir+'mc15_13TeV.361603.PowhegPy8EG_CT10nloME_AZNLOCTEQ6L1_ZZllll_mll4.root')
-                qq_zz.file_list.append(mc_dir+'mc15_13TeV.342556.PowhegPy8EG_CT10nloME_AZNLOCTEQ6L1_ZZllll_mll4_m4l_100_150.root')
-                qq_zz.file_list.append(mc_dir+'mc15_13TeV.343232.PowhegPy8EG_CT10nloME_AZNLOCTEQ6L1_ZZllll_mll4_m4l_500_13000.root')
-
-            elif self.options.sherpa == 2.1:
-                print "use Sherpa 2.1 for qqZZ"
-                # qqZZ, Sherpa, 2.1
-                qq_zz.file_list.append(mc_dir + 'mc15_13TeV.361090.Sherpa_CT10_llll_M4l100.root')
-            elif self.options.sherpa == 2.2:
-                print "use Sherpa 2.2 for qqZZ"
-                # qqZZ, Sherpa, 2.2.2,
-                qq_zz.file_list.append(mc_dir+'mc15_13TeV.363490.Sherpa_221_NNPDF30NNLO_llll.root')
-                qq_zz.file_list.append(mc_dir+'mc15_13TeV.345107.Sherpa_221_NNPDF30NNLO_llll_m4l100_300_filt100_150.root')
-                qq_zz.file_list.append(mc_dir+'mc15_13TeV.345108.Sherpa_221_NNPDF30NNLO_llll_m4l300.root')
-                #qq_zz.scale = 1.0411
-
-            qq_zz.sys_dic = helper.get_sys(self.options.sysDir, 'norm_qqZZ.txt')
-            sample_list.append(qq_zz)
-
-            # ggZZ
-            gg_zz = Sample('ggZZ')
-            gg_zz.file_list.append(mc_dir + 'mc15_13TeV.361073.Sherpa_CT10_ggllll.root')
-            gg_zz.sys_dic = helper.get_sys(self.options.sysDir, 'norm_ggllll.txt')
-            sample_list.append(gg_zz)
-
-            # qqZZjj
-            qq_zz_input = mc_dir + 'mc15_13TeV.361072.Sherpa_CT10_lllljj_EW6.root'
-            qqZZjj = Sample('qqZZjj')
-            qqZZjj.file_list.append(qq_zz_input)
-            qqZZjj.sys_dic = helper.get_sys(self.options.sysDir, 'norm_qqZZEW.txt')
-            if self.options.noVBS:
-                print "VBS samples ignored"
+        self.sample_list = []
+        data = None
+        for name, value in input_.iteritems():
+            if "data" in name:
+                # data
+                data = Sample('data')
+                data.file_list.append(os.path.join(self.get_data_dir(), value))
+                data.is_data = True
             else:
-                sample_list.append(qqZZjj)
+                sample =  Sample(name)
+                sample.file_list = [os.path.join(self.get_mc_dir(), x) for x in value["files"]]
+                sample.sys_dic = helper.get_sys(os.path.join(self.options.sysDir, value['sys']))
+                self.sample_list.append(sample)
 
-
-            # reducible
-            reducible = Sample('reducible')
-            sample_list.append(reducible)
-
-            # ttV
-            ttv = Sample('ttV')
-            ttv.file_list.append(mc_dir + 'mc15_13TeV.361621.Sherpa_CT10_WWZ_4l2v.root')
-            ttv.file_list.append(mc_dir + 'mc15_13TeV.361623.Sherpa_CT10_WZZ_5l1v.root')
-            ttv.file_list.append(mc_dir + 'mc15_13TeV.361625.Sherpa_CT10_ZZZ_6l0v.root')
-            ttv.file_list.append(mc_dir + 'mc15_13TeV.361626.Sherpa_CT10_ZZZ_4l2v.root')
-            ttv.file_list.append(mc_dir + 'mc15_13TeV.410144.Sherpa_NNPDF30NNLO_ttW.root')
-            ttv.file_list.append(mc_dir + 'mc15_13TeV.410142.Sherpa_NNPDF30NNLO_ttll_mll5.root')
-            ttv.sys_dic = helper.get_sys(self.options.sysDir, 'norm_qqZZ.txt')
-            sample_list.append(ttv)
-
-            # data
-            data = Sample('data')
-            data.file_list.append(self.get_data_dir()+ 'data_13TeV.root')
-            data.is_data = True
-            sample_list.append(data)
-        else:
-            print "I don't know"
-
-        return sample_list
-
-
+        self.sample_list.append(data)
 
     @staticmethod
     def combined_sys(list_sys):
@@ -294,8 +226,7 @@ class MinitreeReader(object):
         print out_text
 
     def process(self):
-        self.get_cuts()
-        all_samples = self.get_samples()
+        all_samples = self.sample_list
 
         # get yields for each sample for each category
         # save the information in a 2-D list:
@@ -306,7 +237,7 @@ class MinitreeReader(object):
                     if "reducible" not in sample.name:
                         sample.get_yield(category, options)
                     else:
-                        sample.yields = self.get_reducible()
+                        sample.yields = self.read_reducible()
 
         new_samples = []
         if self.options.comb_zz:
@@ -327,28 +258,23 @@ class MinitreeReader(object):
 
 
 if __name__ == "__main__":
-    usage = "%prog [options]"
+    usage = "%prog [options] minitree.json"
     version="%prog 1.1"
     parser = OptionParser(usage=usage, description="get yields for WS", version=version)
-    parser.add_option("--analysis", dest='analysis', default='HighMass',
-                      help='which analysis, affecting the built-in cuts')
+
+    parser.add_option("--base", default=None, help="base dir for inputs")
+    parser.add_option("--mcDir", default='mc/Nominal',
+                      help="directory for MC")
+    parser.add_option("--dataDir", default='data/Nominal',
+                      help="directory for data")
+    parser.add_option("--sysDir", dest='sysDir', help="directory for data",
+                      default="./")
 
     parser.add_option("--poi", dest='poi', default='m4l_constrained_HM',
                       help='which variable used for counting')
     parser.add_option("--poiRange", dest='poi_range', default='130:1500',
                       help='range of POI')
-    parser.add_option("-w", '--weightName', dest='wName', default='weight_jet', help="Name of weights")
-
-    parser.add_option("--mcDir", dest='mcDir',
-                      default='/afs/cern.ch/atlas/groups/HSG2/H4l/run2/2016/MiniTrees/Prod_v10/mc/Nominal/',
-                      help="directory for MC")
-    parser.add_option("--dataDir", dest='dataDir',
-                      default='/afs/cern.ch/atlas/groups/HSG2/H4l/run2/2016/MiniTrees/Prod_v10/data/Nominal/',
-                      help="directory for data")
-    parser.add_option("--sysDir", dest='sysDir', help="directory for data",
-                      default="/Users/xju/Documents/Higgs/H4l/highmass/yields/")
-    parser.add_option("--prod", dest='prod', default=None, help="Use production")
-
+    parser.add_option("-w", '--weightName', dest='wName', default='weight', help="Name of weights")
     parser.add_option("--lumi", dest='lumi', default=-1, type='float',
                       help='final luminosity')
     parser.add_option("--digits", dest='digits', default=2, type='int',
@@ -359,12 +285,6 @@ if __name__ == "__main__":
                       help="not combine 2mu2e with 2e2mu", action='store_true')
     parser.add_option("--combZZ", dest='comb_zz', default=False,
                       help="combine qq/gg/qqjj", action='store_true')
-
-    parser.add_option("--test", dest='test', default=False, action='store_true', help="no VBF in highmass")
-
-    # change qqZZ samples
-    parser.add_option("--powheg", dest='powheg', default=False, action='store_true', help="use PowHeg for qqZZ")
-    parser.add_option("--sherpa", dest='sherpa', default=2.2, type='float', help="Sherpa version")
 
     # no VBF-like category in HighMass
     parser.add_option("--noVBF", dest='no_VBF', default=False, action='store_true', help="no VBF-like category")
@@ -380,5 +300,10 @@ if __name__ == "__main__":
 
     (options, args) = parser.parse_args()
 
+    if len(args) < 1:
+        parser.print_help()
+        exit(1)
+
     reader = MinitreeReader(options)
+    reader.readInputJson(args[0])
     reader.process()

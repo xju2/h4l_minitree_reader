@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-def get_sys(sys_dir, file_name):
+def get_sys(file_name):
     """
     This will read text file for systematics,
     but up/down systematics are merged to 1.

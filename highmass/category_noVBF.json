@@ -1,0 +1,5 @@
+{
+    "4mu": "event_type == 0",
+    "4e": "event_type == 1",
+    "2mu2e": "(event_type == 2 || event_type == 3)"
+}
