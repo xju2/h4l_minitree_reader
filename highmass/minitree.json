@@ -20,6 +20,7 @@
         ],
         "sys": "norm_ggllll.txt"
     },
+    "reducible": "reducible_noVBF.json",
     "ttV": {
         "files": [
             "mc16_13TeV.364243.Sherpa_222_NNPDF30NNLO_WWZ_4l2v_EW6.root",

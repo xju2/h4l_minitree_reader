@@ -39,13 +39,16 @@ class Sample(object):
             sys_ = 0
 
         hist = None
-        if os.path.exists(options.histOut):
+        if os.path.exists(options.histOut) and not options.new:
             fout = ROOT.TFile.Open(options.histOut)
             hist = fout.Get(self.get_hist_name(category))
 
         if not hist:
             hist = self.create_hist(category, options)
-            fout = ROOT.TFile.Open(options.histOut, 'UPDATE')
+            if options.new:
+                fout = ROOT.TFile.Open(options.histOut, 'recreate')
+            else:
+                fout = ROOT.TFile.Open(options.histOut, 'UPDATE')
             hist.Write()
             fout.Close()
 

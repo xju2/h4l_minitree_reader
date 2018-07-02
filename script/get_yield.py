@@ -44,10 +44,6 @@ class MinitreeReader(object):
         data = json.load(open(json_file))
 
         self.read_categories(data['categories'])
-
-        if "reducible" in data:
-            self.reducible_bkg_input = data['reducible']
-
         self.get_samples(data['samples' ])
 
     def read_categories(self, json_file):
@@ -62,11 +58,21 @@ class MinitreeReader(object):
 
     def read_reducible(self):
         data = json.load(open(self.reducible_bkg_input))
+        def_lumi =  data['lumi']
 
-        if len(data.keys()) != len(self.category_list):
+        if len(data['yields'].keys()) != len(self.category_list):
             raise Exception("categories in reducible background do not match!")
 
-        return data
+        if self.options.lumi > 0:
+            weight = self.options.lumi/def_lumi
+        else:
+            weight = 1.
+
+        scaled_res = {}
+        for key, value in data['yields'].iteritems():
+            scaled_res[key] = [x*weight for x in value]
+
+        return scaled_res
 
     def get_mc_dir(self):
         return os.path.join(self.DIR_BASE, self.options.mcDir) if self.DIR_BASE is not None else self.options.mcDir
@@ -75,12 +81,13 @@ class MinitreeReader(object):
         return os.path.join(self.DIR_BASE, self.options.dataDir) if self.DIR_BASE is not None else self.options.dataDir
 
     def get_samples(self, json_file):
-        input_ =  json.load(open(json_file))
+        input_ =  json.load(open(json_file), object_pairs_hook=OrderedDict)
         mc_dir = self.get_mc_dir()
         print "MC dir",mc_dir
         self.sample_list = []
         data = None
         for name, value in input_.iteritems():
+            print "#####",name
             if "data" in name:
                 # data
                 data = Sample('data')
@@ -88,6 +95,10 @@ class MinitreeReader(object):
                 data.is_data = True
             else:
                 sample =  Sample(name)
+                if "reducible" == name:
+                    self.reducible_bkg_input = value
+                    self.sample_list.append(sample)
+                    continue
                 sample.file_list = [os.path.join(self.get_mc_dir(), x) for x in value["files"]]
                 sample.sys_dic = helper.get_sys(os.path.join(self.options.sysDir, value['sys']))
                 self.sample_list.append(sample)
@@ -297,6 +308,7 @@ if __name__ == "__main__":
     parser.add_option("--paper", dest='paper', default=False, help="paper style", action='store_true')
 
     parser.add_option("--histOut", default="hist_yields.root", help="root file for histograms")
+    parser.add_option("--new", default=False, help="not use root file as input", action='store_true')
 
     (options, args) = parser.parse_args()
 
