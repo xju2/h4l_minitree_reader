@@ -15,10 +15,10 @@
     },
     "ggZZ": {
         "files": [
-            "mc16_13TeV.343212.Powheggg2vvPythia8EvtGen_gg_ZZ_bkg_2e2mu_13TeV.root",
-            "mc16_13TeV.343213.Powheggg2vvPythia8EvtGen_gg_ZZ_bkg_4l_noTau_13TeV.root"
+            "mc16_13TeV.345709.Sherpa_222_NNPDF30NNLO_ggllllNoHiggs_130M4l_AFii_.root"
         ],
-        "sys": "norm_ggllll.txt"
+        "sys": "norm_ggllll.txt",
+        "scale": 1.6286
     },
     "reducible": "reducible_noVBF.json",
     "ttV": {

@@ -11,7 +11,10 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(
 
 from h4l_minitree_reader.sample import Sample
 from h4l_minitree_reader.sample import Category
-from h4l_minitree_reader import helper
+
+from h4l_minitree_reader.helper import get_sys
+from h4l_minitree_reader.helper import significant_digits
+from h4l_minitree_reader.helper import find_precision
 
 import ROOT
 ROOT.gROOT.SetBatch()
@@ -99,8 +102,10 @@ class MinitreeReader(object):
                     self.reducible_bkg_input = value
                     self.sample_list.append(sample)
                     continue
+                if "scale" in value.keys():
+                    sample.scale = float(value['scale'])
                 sample.file_list = [os.path.join(self.get_mc_dir(), x) for x in value["files"]]
-                sample.sys_dic = helper.get_sys(os.path.join(self.options.sysDir, value['sys']))
+                sample.sys_dic = get_sys(os.path.join(self.options.sysDir, value['sys']))
                 self.sample_list.append(sample)
 
         self.sample_list.append(data)
@@ -144,11 +149,15 @@ class MinitreeReader(object):
         """
         split_sys = self.options.split
         dd = self.options.digits
+        stats = significant_digits(stats, dd)[0]
+        sys = significant_digits(sys, dd)[0]
+        mag, digits_ = find_precision([stats, sys], dd)
+        # print(mag, digits_, stats, sys)
         if split_sys:
-            res = str(round(nominal, dd))+' $\pm$ '+str(round(stats, dd))+' $\pm$ '+str(round(sys,dd))
+            res = "{2:{0}.{1}f} $\pm$ {3} $\pm$ {4}".format(mag, digits_, nominal, stats, sys)
         else:
             total_ = math.sqrt(stats**2 + sys**2)
-            res = str(round(nominal, dd))+' $\pm$ '+str(round(total_, dd))
+            res = "{2:{0}.{1}f} $\pm$ {3:{0}.{1}f}".format(mag, digits_, nominal, total_)
 
         return res
 

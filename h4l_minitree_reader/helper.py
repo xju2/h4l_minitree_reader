@@ -3,6 +3,7 @@ import ROOT
 import sys
 from root_pandas import read_root
 import pandas as pd
+import math
 
 def get_sys(file_name):
     """
@@ -44,6 +45,41 @@ def apply_cut(file_name, new_file_name, tree_name, cuts):
     new_tree.Write()
     outfile.Close()
     f1.Close()
+
+def find_precision(errors, digits):
+    min_digits = 99
+    max_mag = 0
+    for error in errors:
+        new_err, mag, digits_ = significant_digits(error, digits)
+        if mag > max_mag:
+            max_mag = mag
+
+        if digits_ < min_digits:
+            min_digits = digits_
+    return max_mag, min_digits
+
+# https://cds.cern.ch/record/1668799/files/ATL-COM-GEN-2014-006.pdf
+def significant_digits(number, nsig=2):
+    if abs(number) < 1E-6:
+        return [0, 0, 0]
+    int_part = abs(int(number))
+    frac_part = abs(number) - int_part
+    if int_part == 0:
+        trivial_digits = 0
+        while int(10*frac_part) == 0:
+            frac_part *= 10
+            trivial_digits += 1
+        return [round(number,trivial_digits+nsig), 0, trivial_digits+nsig]
+    else:
+        magnitude = int(math.log10(abs(number))) + 1
+        trivial_scale = 0
+        if magnitude < nsig:
+            trivial_scale = nsig - magnitude
+            number = round(number, trivial_scale)
+        else:
+            number = int_part
+
+        return [number, int(math.log10(abs(number))) + 1, trivial_scale]
 
 
 def overlap_study(f1, f1_suffix, f2, f2_suffix, var_name, low, hi, tree_name="tree_incl_all"):
