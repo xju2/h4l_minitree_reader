@@ -1,0 +1,16 @@
+[ggF_2mu2e_13TeV]
+ATLAS_Lumi = 0.968 1.032
+pdf_gg = 0.92 1.08
+QCDscale_ggVV = 0.40  1.60
+[ggF_4e_13TeV]
+ATLAS_Lumi = 0.968 1.032
+pdf_gg = 0.92 1.08
+QCDscale_ggVV = 0.40  1.60
+[ggF_4mu_13TeV]
+ATLAS_Lumi = 0.968 1.032
+QCDscale_ggVV = 0.40  1.60
+pdf_gg = 0.92 1.08
+[VBF_incl_13TeV]
+ATLAS_Lumi = 0.968 1.032
+QCDscale_ggVV2in = 0.0001  1.9999
+pdf_gg = 0.92 1.08

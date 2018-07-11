@@ -5,19 +5,19 @@
             "mc16_13TeV.364251.Sherpa_222_NNPDF30NNLO_llll_m4l100_300_filt100_150.root",
             "mc16_13TeV.364252.Sherpa_222_NNPDF30NNLO_llll_m4l300.root"
         ],
-        "sys": "norm_qqZZ.txt"
+        "sys": ["norm_qqZZ.txt", "theory_qqZZ.txt"]
     },
     "qqZZjj": {
         "files": [
             "mc16_13TeV.364283.Sherpa_222_NNPDF30NNLO_lllljj_EW6.root"
         ],
-        "sys": "norm_qqZZEW.txt"
+        "sys": ["norm_qqZZEW.txt", "theory_qqZZEW.txt"]
     },
     "ggZZ": {
         "files": [
             "mc16_13TeV.345709.Sherpa_222_NNPDF30NNLO_ggllllNoHiggs_130M4l_AFii_.root"
         ],
-        "sys": "norm_ggllll.txt",
+        "sys": ["norm_ggllll.txt", "theory_ggZZ.txt"],
         "scale": 1.6286
     },
     "reducible": "reducible_noVBF.json",

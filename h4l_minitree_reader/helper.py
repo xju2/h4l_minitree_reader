@@ -5,7 +5,7 @@ from root_pandas import read_root
 import pandas as pd
 import math
 
-def get_sys(file_name):
+def get_sys_one(file_name):
     """
     This will read text file for systematics,
     but up/down systematics are merged to 1.
@@ -36,6 +36,21 @@ def get_sys(file_name):
             sys_map[curr_section][sys_name] = mean
     return sys_map
 
+
+def get_sys(file_input):
+    if type(file_input) is list:
+        sys_map = None
+        for f_id, file_ in enumerate(file_input):
+            if f_id == 0:
+                sys_map = get_sys_one(file_)
+            else:
+                sys_tmp = get_sys_one(file_)
+                for section,sys_dict in sys_tmp.iteritems():
+                    for key, value in sys_dict.iteritems():
+                        sys_map[section][key] = value
+        return sys_map
+    else:
+        return get_sys_one(file_input)
 
 def apply_cut(file_name, new_file_name, tree_name, cuts):
     f1 = ROOT.TFile.Open(file_name)
