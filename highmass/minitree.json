@@ -31,7 +31,7 @@
             "mc16_13TeV.410218.aMcAtNloPythia8EvtGen_MEN30NLO_A14N23LO_ttee.root",
             "mc16_13TeV.410219.aMcAtNloPythia8EvtGen_MEN30NLO_A14N23LO_ttmumu.root"
         ],
-        "sys": "norm_qqZZ.txt"
+        "sys": ["norm_qqZZ.txt", "theory_qqZZ.txt"]
     },
     "data": "data15to16_13TeV.root"
 }
