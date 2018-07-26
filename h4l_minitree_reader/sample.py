@@ -30,7 +30,7 @@ class Sample(object):
             try:
                 sys_ = self.sys_dic[category.name]
             except KeyError:
-                print self.name,"no systematics?"
+                print self.name,"no systematics in", category.name
                 sys_ = 0
             except TypeError:
                 print self.name,"no systematic dictionary"

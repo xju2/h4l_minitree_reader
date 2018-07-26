@@ -43,11 +43,9 @@ class MinitreeReader(object):
 
         self.category_list = []
 
-    def readInputJson(self, json_file):
-        data = json.load(open(json_file))
-
-        self.read_categories(data['categories'])
-        self.get_samples(data['samples' ])
+    def readInputJson(self, category, sample):
+        self.read_categories(category)
+        self.get_samples(sample)
 
     def read_categories(self, json_file):
         data = json.load(open(json_file))
@@ -99,13 +97,13 @@ class MinitreeReader(object):
             else:
                 sample =  Sample(name)
                 if "reducible" == name:
-                    self.reducible_bkg_input = value
+                    self.reducible_bkg_input = os.path.join(os.path.dirname(json_file), value)
                     self.sample_list.append(sample)
                     continue
                 if "scale" in value.keys():
                     sample.scale = float(value['scale'])
                 sample.file_list = [os.path.join(self.get_mc_dir(), x) for x in value["files"]]
-                sample.sys_dic = get_sys(os.path.join(self.options.sysDir, value['sys']))
+                sample.sys_dic = get_sys(self.options.sysDir, value['sys'])
                 self.sample_list.append(sample)
 
         self.sample_list.append(data)
@@ -191,7 +189,7 @@ class MinitreeReader(object):
                 exp_, stat_, sys_dic_ = sample.yields[ch_name]
 
                 if 'data' in sample.name:
-                    out_text += ' & ' + str(exp_)
+                    out_text += ' & ' + str(int(exp_))
                 else:
                     sys_ = self.get_sys_val(exp_, sys_dic_)
                     out_text += ' & ' + self.get_str(exp_, stat_, sys_)
@@ -209,7 +207,7 @@ class MinitreeReader(object):
             total_sys = self.get_sys_val(total_exp, total_sys_dic)
 
             if "data" in sample.name:
-                out_text += ' & '+ str(total_exp)
+                out_text += ' & '+ str(int(total_exp))
             else:
                 out_text += ' & '+self.get_str(total_exp, total_stat, total_sys)
 
@@ -278,7 +276,7 @@ class MinitreeReader(object):
 
 
 if __name__ == "__main__":
-    usage = "%prog [options] minitree.json"
+    usage = "%prog [options]"
     version="%prog 1.1"
     parser = OptionParser(usage=usage, description="get yields for WS", version=version)
 
@@ -306,6 +304,12 @@ if __name__ == "__main__":
     parser.add_option("--combZZ", dest='comb_zz', default=False,
                       help="combine qq/gg/qqjj", action='store_true')
 
+    # add samples
+    parser.add_option('-s', "--sample", default='minitree.json',
+                      help="A json file configuring minitree files")
+    parser.add_option('-c', "--category", default='category_noVBF.json',
+                      help="A json file configuring categorization")
+
     # no VBF-like category in HighMass
     parser.add_option("--noVBF", dest='no_VBF', default=False, action='store_true', help="no VBF-like category")
     # no VBS samples in HighMass
@@ -321,10 +325,14 @@ if __name__ == "__main__":
 
     (options, args) = parser.parse_args()
 
-    if len(args) < 1:
-        parser.print_help()
+    if not os.path.exists(options.category):
+        print options.category," is missing!"
+        exit(1)
+
+    if not os.path.exists(options.sample):
+        print options.sample," is missing!"
         exit(1)
 
     reader = MinitreeReader(options)
-    reader.readInputJson(args[0])
+    reader.readInputJson(options.category, options.sample)
     reader.process()

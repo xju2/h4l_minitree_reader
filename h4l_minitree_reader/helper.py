@@ -4,6 +4,7 @@ import sys
 from root_pandas import read_root
 import pandas as pd
 import math
+import os
 
 def get_sys_one(file_name):
     """
@@ -25,6 +26,7 @@ def get_sys_one(file_name):
             # update the current section and add a section to the map
             if '[' in line:
                 curr_section = line[1:-1].strip()
+                curr_section = curr_section.replace('ggF_', '').replace('_13TeV', '')
                 if curr_section not in sys_map:
                     sys_map[curr_section] = {}
                 continue
@@ -37,20 +39,23 @@ def get_sys_one(file_name):
     return sys_map
 
 
-def get_sys(file_input):
+def get_sys(sys_dir, file_input):
     if type(file_input) is list:
         sys_map = None
         for f_id, file_ in enumerate(file_input):
             if f_id == 0:
-                sys_map = get_sys_one(file_)
+                sys_map = get_sys_one(os.path.join(sys_dir, file_))
             else:
-                sys_tmp = get_sys_one(file_)
+                sys_tmp = get_sys_one(os.path.join(sys_dir, file_))
                 for section,sys_dict in sys_tmp.iteritems():
-                    for key, value in sys_dict.iteritems():
-                        sys_map[section][key] = value
+                    if section in sys_map:
+                        for key, value in sys_dict.iteritems():
+                            sys_map[section][key] = value
+                    #else:
+                    #    print section,"is not there"
         return sys_map
     else:
-        return get_sys_one(file_input)
+        return get_sys_one(os.path.join(sys_dir, file_input))
 
 def apply_cut(file_name, new_file_name, tree_name, cuts):
     f1 = ROOT.TFile.Open(file_name)

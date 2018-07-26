@@ -1,0 +1,36 @@
+{
+    "qqZZ": {
+        "files": [
+            "mc15_13TeV.363490.Sherpa_221_NNPDF30NNLO_llll.root",
+            "mc15_13TeV.345107.Sherpa_221_NNPDF30NNLO_llll_m4l100_300_filt100_150.root",
+            "mc15_13TeV.345108.Sherpa_221_NNPDF30NNLO_llll_m4l300.root"
+        ],
+        "sys": ["norm_qqZZ.txt"]
+    },
+    "qqZZjj": {
+        "files": [
+            "mc15_13TeV.361072.Sherpa_CT10_lllljj_EW6.root"
+        ],
+        "sys": ["norm_qqZZEW.txt", "theory_qqZZEW.txt"]
+    },
+    "ggZZ": {
+        "files": [
+            "mc15_13TeV.361073.Sherpa_CT10_ggllll.root"
+        ],
+        "sys": ["norm_ggllll.txt", "theory_ggZZ.txt"],
+        "scale": 1.0
+    },
+    "reducible": "reducible_noVBF.json",
+    "ttV": {
+        "files": [
+            "mc15_13TeV.361621.Sherpa_CT10_WWZ_4l2v.root",
+            "mc15_13TeV.361623.Sherpa_CT10_WZZ_5l1v.root",
+            "mc15_13TeV.361625.Sherpa_CT10_ZZZ_6l0v.root",
+            "mc15_13TeV.361626.Sherpa_CT10_ZZZ_4l2v.root",
+            "mc15_13TeV.410144.Sherpa_NNPDF30NNLO_ttW.root",
+            "mc15_13TeV.410142.Sherpa_NNPDF30NNLO_ttll_mll5.root"
+        ],
+        "sys": ["norm_qqZZ.txt"]
+    },
+    "data": "data_13TeV.root"
+}
