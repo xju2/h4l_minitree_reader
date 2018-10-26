@@ -53,7 +53,7 @@ class MinitreeReader(object):
         m4l_ = self.options.poi
         mass_cut = "pass_vtx4lCut==1 &&"+self.mass_low+"<"+m4l_+"&&"+m4l_+"<"+self.mass_hi+"&&"
         for name,cut in data.iteritems():
-            cut = mass_cut+cut 
+            cut = mass_cut+cut
             self.category_list.append(Category(name=name, cut=cut))
 
 
