@@ -276,7 +276,7 @@ class MinitreeReader(object):
 
 
 if __name__ == "__main__":
-    usage = "%prog [options]"
+    usage = "%prog [options] minitree.json category.json"
     version="%prog 1.1"
     parser = OptionParser(usage=usage, description="get yields for WS", version=version)
 
@@ -304,14 +304,7 @@ if __name__ == "__main__":
     parser.add_option("--combZZ", dest='comb_zz', default=False,
                       help="combine qq/gg/qqjj", action='store_true')
 
-    # add samples
-    parser.add_option('-s', "--sample", default='minitree.json',
-                      help="A json file configuring minitree files")
-    parser.add_option('-c', "--category", default='category_noVBF.json',
-                      help="A json file configuring categorization")
 
-    # no VBF-like category in HighMass
-    parser.add_option("--noVBF", dest='no_VBF', default=False, action='store_true', help="no VBF-like category")
     # no VBS samples in HighMass
     parser.add_option("--noVBS", dest='noVBS', default=False, action='store_true', help="no VBS events")
     # separate VBS samples in yields
@@ -325,14 +318,11 @@ if __name__ == "__main__":
 
     (options, args) = parser.parse_args()
 
-    if not os.path.exists(options.category):
-        print options.category," is missing!"
+    if len(args) < 2:
+        parser.print_help()
         exit(1)
 
-    if not os.path.exists(options.sample):
-        print options.sample," is missing!"
-        exit(1)
 
     reader = MinitreeReader(options)
-    reader.readInputJson(options.category, options.sample)
+    reader.readInputJson(args[1], args[0])
     reader.process()
